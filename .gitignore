@@ -132,6 +132,7 @@ dmypy.json
 *.jpeg
 *.pdf
 *.txt
+*.h5
 
 # Pyre type checker
 .pyre/

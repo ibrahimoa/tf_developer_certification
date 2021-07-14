@@ -126,5 +126,12 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# data files
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.txt
+
 # Pyre type checker
 .pyre/

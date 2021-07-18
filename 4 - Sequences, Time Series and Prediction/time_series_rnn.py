@@ -1,5 +1,3 @@
-import numpy as np
-import tensorflow as tf
 # Lambda -> Arbitrary operations to improve out model
 from tensorflow.keras.layers import SimpleRNN, Dense, Lambda
 from tensorflow.keras.models import Sequential

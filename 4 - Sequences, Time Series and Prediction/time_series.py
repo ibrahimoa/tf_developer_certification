@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
+
 # Data affected by time usally have trend, seasonality, autocorrelation and noise (white/pink) -> Patterns
 
 def plot_series(time, series, format="-", plot=True, figure=True):
@@ -14,21 +15,26 @@ def plot_series(time, series, format="-", plot=True, figure=True):
     if plot:
         plt.show()
 
+
 def trend(time, slope=0.0):
     return slope * time
+
 
 def seasonal_pattern(season_time):
     return np.where(season_time < 0.4,
                     np.cos(season_time * 2 * np.pi),  # Value when the condition season_time < 0.4 is true
                     1 / np.exp(3 * season_time))  # Value when season_time >= 0.4
 
+
 def seasonality(time, period, amplitude=1, phase=0):
     season_time = ((time + phase) % period) / period
     return amplitude * seasonal_pattern(season_time)
 
+
 def white_noise(time, noise_level=1, seed=None):
     rnd = np.random.RandomState(seed)
     return rnd.randn(len(time)) * noise_level
+
 
 def autocorrelation_1(time, amplitude, seed=None):  # Autocorrelation have delay included
     rnd = np.random.RandomState(seed)
@@ -41,6 +47,7 @@ def autocorrelation_1(time, amplitude, seed=None):  # Autocorrelation have delay
         ar[step] += phi_2 * ar[step - 33]
     return ar[50:] * amplitude
 
+
 def impulses(time, num_impulses, amplitude=1, seed=None):
     rnd = np.random.RandomState(seed)
     impulse_indices = rnd.randint(len(time), size=num_impulses)
@@ -48,6 +55,7 @@ def impulses(time, num_impulses, amplitude=1, seed=None):
     for index in impulse_indices:
         series[index] += rnd.rand() * amplitude
     return series
+
 
 def autocorrelation_2(source, phi_s):
     ar = source.copy()
@@ -57,6 +65,7 @@ def autocorrelation_2(source, phi_s):
             if step - lag > 0:
                 ar[step] += phi * ar[step - lag]
     return ar
+
 
 def moving_average_forecast(series, window_size):
     """Forecasts the mean if the last few values.
@@ -92,47 +101,46 @@ def moving_average_forecast(series, window_size):
 # However, to smooth past values we can afford to use centered windows.
 
 if __name__ == "__main__":
-
     time = np.arange(4 * 365 + 1, dtype="float32")
     baseline = 10
     amplitude = 40
     slope = 0.05
     noise_level = 5
 
-    #series = trend(time, 0.1)
-    #plot_series(time, series)
+    # series = trend(time, 0.1)
+    # plot_series(time, series)
 
-    #series = seasonality(time, period=365, amplitude=amplitude)
-    #plot_series(time, series)
+    # series = seasonality(time, period=365, amplitude=amplitude)
+    # plot_series(time, series)
 
-    #series = baseline + trend(time, slope) + seasonality(time, period=365, amplitude=amplitude)
-    #plot_series(time, series)
+    # series = baseline + trend(time, slope) + seasonality(time, period=365, amplitude=amplitude)
+    # plot_series(time, series)
 
-    #noise = white_noise(time, noise_level, seed=42)
-    #plot_series(time, noise)
+    # noise = white_noise(time, noise_level, seed=42)
+    # plot_series(time, noise)
 
-    #series = autocorrelation_1(time, 10, seed=42)
-    #plot_series(time[:200], series[:200])
+    # series = autocorrelation_1(time, 10, seed=42)
+    # plot_series(time[:200], series[:200])
 
-    #signal = impulses(time, 10, seed=42)
-    #plot_series(time, signal)
+    # signal = impulses(time, 10, seed=42)
+    # plot_series(time, signal)
 
-    #series = autocorrelation_2(signal, {1: 0.99})
-    #plot_series(time, series, plot=False)
-    #plt.plot(time, signal, "-k")
-    #plt.show()
+    # series = autocorrelation_2(signal, {1: 0.99})
+    # plot_series(time, series, plot=False)
+    # plt.plot(time, signal, "-k")
+    # plt.show()
 
-    #signal = impulses(time, 10, seed=42)
-    #series = autocorrelation_2(signal, {1: 0.70, 50: 0.2})
-    #plot_series(time, series, plot=False)
-    #plt.plot(time, signal, "-k")
-    #plt.show()
+    # signal = impulses(time, 10, seed=42)
+    # series = autocorrelation_2(signal, {1: 0.70, 50: 0.2})
+    # plot_series(time, series, plot=False)
+    # plt.plot(time, signal, "-k")
+    # plt.show()
 
-    #from pandas.plotting import autocorrelation_plot
+    # from pandas.plotting import autocorrelation_plot
 
-    #plt.figure(figsize=(10, 6))
-    #autocorrelation_plot(series)
-    #plt.show()
+    # plt.figure(figsize=(10, 6))
+    # autocorrelation_plot(series)
+    # plt.show()
 
     series = baseline + trend(time, slope) + seasonality(time, period=365, amplitude=amplitude) + white_noise(time, noise_level, seed=42)
     split_time = 1000
@@ -165,7 +173,7 @@ if __name__ == "__main__":
     # Differencing series:
     diff_series = (series[365:] - series[:-365])
     diff_time = time[365:]
-    #plot_series(diff_time, diff_series)
+    # plot_series(diff_time, diff_series)
 
     # Moving average + differencing:
     diff_moving_avg = moving_average_forecast(diff_series, 50)[split_time - 365 - 50:]

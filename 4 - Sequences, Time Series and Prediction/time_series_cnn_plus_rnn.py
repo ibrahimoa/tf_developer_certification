@@ -1,9 +1,8 @@
-import numpy as np
-import tensorflow as tf
 # Lambda -> Arbitrary operations to improve out model
 from tensorflow.keras.layers import Dense, Lambda, Bidirectional, LSTM, Conv1D
 from tensorflow.keras.models import Sequential
 from time_series import *
+
 
 def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
     series = tf.expand_dims(series, axis=-1)
@@ -15,6 +14,7 @@ def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
     dataset = dataset.batch(batch_size).prefetch(1)
     return dataset
 
+
 def model_forecast(model, series, window_size):
     ds = tf.data.Dataset.from_tensor_slices(series)
     ds = ds.window(window_size, shift=1, drop_remainder=True)
@@ -23,6 +23,7 @@ def model_forecast(model, series, window_size):
     forecast = model.predict(ds)
     return forecast
 
+
 time = np.arange(4 * 365 + 1, dtype="float32")
 baseline = 10
 amplitude = 40
@@ -30,7 +31,7 @@ slope = 0.05
 noise_level = 5
 split_time = 1000
 window_size = 20
-batch_size = 32 # The impact of this variable is high (Check the Machine Learning course ... )
+batch_size = 32  # The impact of this variable is high (Check the Machine Learning course ... )
 shuffle_buffer_size = 1000
 
 series = baseline + trend(time, slope) + seasonality(time, period=365, amplitude=amplitude) + white_noise(time, noise_level, seed=42)
@@ -48,32 +49,32 @@ model = Sequential([
     Lambda(lambda x: x * 200.0)
 ])
 
-optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.9) # We can get this optimum lr as in previous examples
-model.compile(loss=tf.keras.losses.Huber(), # Less sensitive to outliers
+optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.9)  # We can get this optimum lr as in previous examples
+model.compile(loss=tf.keras.losses.Huber(),  # Less sensitive to outliers
               optimizer=optimizer,
               metrics=["mae"])
 history = model.fit(train_set, epochs=500)
 
 rnn_forecast = model_forecast(model, series[..., np.newaxis], window_size)
 rnn_forecast = rnn_forecast[split_time - window_size:-1, -1]
-plt.figure(figsize=(10,6))
+plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid, plot=False, figure=False)
 plot_series(time_valid, rnn_forecast, plot=False, figure=False)
 plt.show()
 print(tf.keras.metrics.mean_absolute_error(x_valid, rnn_forecast).numpy())
 
-#-----------------------------------------------------------
+# -----------------------------------------------------------
 # Retrieve a list of list results on training and test data
 # sets for each training epoch
-#-----------------------------------------------------------
+# -----------------------------------------------------------
 mae = history.history['mae']
 loss = history.history['loss']
 
-epochs = range(len(loss)) # Get number of epochs
+epochs = range(len(loss))  # Get number of epochs
 
-#------------------------------------------------
+# ------------------------------------------------
 # Plot MAE and Loss
-#------------------------------------------------
+# ------------------------------------------------
 plt.figure()
 plt.plot(epochs, mae, 'r')
 plt.plot(epochs, loss, 'b')
@@ -82,9 +83,9 @@ plt.xlabel("Epochs")
 plt.ylabel("Accuracy")
 plt.legend(["MAE", "Loss"])
 plt.show()
-#------------------------------------------------
+# ------------------------------------------------
 # Plot Zoomed MAE and Loss
-#------------------------------------------------
+# ------------------------------------------------
 epochs_zoom = epochs[200:]
 mae_zoom = mae[200:]
 loss_zoom = loss[200:]

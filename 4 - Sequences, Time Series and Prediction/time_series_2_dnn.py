@@ -1,5 +1,5 @@
 from tensorflow.keras import layers
-from time_series import *
+from time_series_1 import *
 
 dataset = tf.data.Dataset.range(10)
 dataset = dataset.window(5, shift=1, drop_remainder=True)  # drop_remainder -> Only give us windows with 5 items
@@ -41,7 +41,7 @@ shuffle_buffer_size = 1000
 
 lr_schedule = tf.keras.callbacks.LearningRateScheduler(
     lambda epoch: 1e-8 * 10 ** (epoch / 20))
-optimizer = tf.keras.optimizers.SGD(lr=1e-8, momentum=0.9)
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-8, momentum=0.9)
 dataset = windowed_dataset(series, window_size, batch_size, shuffle_buffer_size)
 
 ###################################################### LINEAR REGRESSION ###################################################
@@ -63,7 +63,8 @@ plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid, plot=False, figure=False)
 plot_series(time_valid, results, plot=False, figure=False)
 plt.show()
-print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
+print('Linear Regression:')
+print(f'Mean absolute error: {tf.keras.metrics.mean_absolute_error(x_valid, results).numpy()}')
 
 ########################################################### DNN ########################################################
 
@@ -91,7 +92,7 @@ model = tf.keras.models.Sequential([
     layers.Dense(10, activation='relu'),
     layers.Dense(1)
 ])
-optimizer = tf.keras.optimizers.SGD(lr=7e-6, momentum=0.9)
+optimizer = tf.keras.optimizers.SGD(learning_rate=7e-6, momentum=0.9)
 model.compile(loss="mse", optimizer=optimizer)
 history = model.fit(dataset,
                     epochs=500,
@@ -110,4 +111,5 @@ plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid, plot=False, figure=False)
 plot_series(time_valid, results, plot=False, figure=False)
 plt.show()
-print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
+print('Neural Network:')
+print(f'Mean absolute error: {tf.keras.metrics.mean_absolute_error(x_valid, results).numpy()}')

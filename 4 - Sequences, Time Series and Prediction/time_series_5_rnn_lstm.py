@@ -1,7 +1,6 @@
-# Lambda -> Arbitrary operations to improve out model
-from tensorflow.keras.layers import SimpleRNN, Dense, Lambda, Bidirectional, LSTM
+from tensorflow.keras.layers import Dense, Lambda, Bidirectional, LSTM
 from tensorflow.keras.models import Sequential
-from time_series import *
+from time_series_1 import *
 
 
 def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
@@ -39,7 +38,7 @@ model = Sequential([
     Lambda(lambda x: x * 100.0)
 ])
 
-optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.9)  # We can get this optimum lr as in previous examples
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-5, momentum=0.9)  # We can get this optimum lr as in previous examples
 model.compile(loss="mse",
               optimizer=optimizer,
               metrics=["mae"])

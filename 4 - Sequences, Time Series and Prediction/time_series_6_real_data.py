@@ -1,21 +1,21 @@
-from tensorflow.keras.layers import Dense, Lambda, Bidirectional, LSTM, Conv1D
+from tensorflow.keras.layers import Dense, Lambda, LSTM, Conv1D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import SGD
-from time_series import *
+from time_series_1 import *
 
 import csv
 
 time_step = []
 sunspots = []
-with open("Sunspots.csv") as csvfile:
-    reader = csv.reader(csvfile, delimiter=',')
+with open("Sunspots.csv") as csv_file:
+    reader = csv.reader(csv_file, delimiter=',')
     next(reader)  # Ignore first line since it's information and not data
     for row in reader:
-        sunspots.append(float(row[2]))
         time_step.append(int(row[0]))
+        sunspots.append(float(row[2]))
 
-series = np.array(sunspots)
 time = np.array(time_step)
+series = np.array(sunspots)
 plot_series(time, series)
 
 split_time = 3000  # Total data: 3500. 3000 for training and 500 for validation
@@ -62,7 +62,7 @@ model = Sequential([
 ])
 
 lr_schedule = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-8 * 10 ** (epoch / 20))
-optimizer = SGD(lr=1e-8, momentum=0.9)
+optimizer = SGD(learning_rate=1e-8, momentum=0.9)
 model.compile(loss=tf.keras.losses.Huber(), optimizer=optimizer, metrics=['mae'])
 history = model.fit(dataset, epochs=100, callbacks=[lr_schedule])
 
@@ -85,7 +85,7 @@ model = Sequential([
     Dense(1),
     Lambda(lambda x: x * 400)
 ])
-optimizer = SGD(lr=1e-5, momentum=0.9)
+optimizer = SGD(learning_rate=1e-5, momentum=0.9)
 model.compile(loss=tf.keras.losses.Huber(), optimizer=optimizer, metrics=['mae'])
 history = model.fit(dataset, epochs=500)
 
@@ -95,7 +95,7 @@ plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid, plot=False, figure=False)
 plot_series(time_valid, rnn_forecast, plot=False, figure=False)
 plt.show()
-print(tf.keras.metrics.mean_absolute_error(x_valid, rnn_forecast).numpy())
+print(f'Mean absolute error: {tf.keras.metrics.mean_absolute_error(x_valid, rnn_forecast).numpy()}')
 
 mae = history.history['mae']
 loss = history.history['loss']

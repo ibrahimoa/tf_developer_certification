@@ -157,8 +157,9 @@ if __name__ == "__main__":
     plot_series(time_valid, x_valid, plot=False, figure=False)
     plot_series(time_valid, naive_forecast, plot=False, figure=False)
     plt.show()
-    print(tf.keras.metrics.mean_squared_error(x_valid, naive_forecast).numpy())
-    print(tf.keras.metrics.mean_absolute_error(x_valid, naive_forecast).numpy())
+    print('\nNaive forecast:')
+    print(f'Mean squared error: {tf.keras.metrics.mean_squared_error(x_valid, naive_forecast).numpy()}')
+    print(f'Mean squared error: {tf.keras.metrics.mean_absolute_error(x_valid, naive_forecast).numpy()}')
 
     # Moving series
     moving_average = moving_average_forecast(series, 30)[split_time - 30:]
@@ -167,8 +168,8 @@ if __name__ == "__main__":
     plot_series(time_valid, moving_average, plot=False, figure=False)
     plt.show()
     print('\nMoving average:')
-    print(tf.keras.metrics.mean_squared_error(x_valid, moving_average).numpy())
-    print(tf.keras.metrics.mean_absolute_error(x_valid, moving_average).numpy())
+    print(f'Mean squared error: {tf.keras.metrics.mean_squared_error(x_valid, moving_average).numpy()}')
+    print(f'Mean squared error: {tf.keras.metrics.mean_absolute_error(x_valid, moving_average).numpy()}')
 
     # Differencing series:
     diff_series = (series[365:] - series[:-365])
@@ -181,16 +182,19 @@ if __name__ == "__main__":
     plot_series(time_valid, diff_series[split_time - 365:], plot=False, figure=False)
     plot_series(time_valid, diff_moving_avg, plot=False, figure=False)
     plt.show()
+    print('\nMoving average + differencing:')
+    print(f'Mean squared error: {tf.keras.metrics.mean_squared_error(x_valid, diff_moving_avg).numpy()}')
+    print(f'Mean squared error: {tf.keras.metrics.mean_absolute_error(x_valid, diff_moving_avg).numpy()}')
 
-    # Now let's bring back the tren and seasonality by adding past values from t - 365
+    # Now let's bring back the trend and seasonality by adding past values from t - 365
     diff_moving_avg_plus_past = series[split_time - 365: -365] + diff_moving_avg
     plt.figure(figsize=(10, 6))
     plot_series(time_valid, x_valid, plot=False, figure=False)
     plot_series(time_valid, diff_moving_avg_plus_past, plot=False, figure=False)
     plt.show()
     print('\nDifferencing moving average with past values:')
-    print(tf.keras.metrics.mean_squared_error(x_valid, diff_moving_avg_plus_past).numpy())
-    print(tf.keras.metrics.mean_absolute_error(x_valid, diff_moving_avg_plus_past).numpy())
+    print(f'Mean squared error: {tf.keras.metrics.mean_squared_error(x_valid, diff_moving_avg_plus_past).numpy()}')
+    print(f'Mean squared error: {tf.keras.metrics.mean_absolute_error(x_valid, diff_moving_avg_plus_past).numpy()}')
 
     # Use moving average on past values to reduce the noise:
     diff_moving_avg_plus_smooth_past = moving_average_forecast(series[split_time - 370: -360], 10) + diff_moving_avg
@@ -199,5 +203,5 @@ if __name__ == "__main__":
     plot_series(time_valid, diff_moving_avg_plus_smooth_past, plot=False, figure=False)
     plt.show()
     print('\nDifferencing moving average with smooth past values:')
-    print(tf.keras.metrics.mean_squared_error(x_valid, diff_moving_avg_plus_smooth_past).numpy())
-    print(tf.keras.metrics.mean_absolute_error(x_valid, diff_moving_avg_plus_smooth_past).numpy())
+    print(f'Mean squared error: {tf.keras.metrics.mean_squared_error(x_valid, diff_moving_avg_plus_smooth_past).numpy()}')
+    print(f'Mean squared error: {tf.keras.metrics.mean_absolute_error(x_valid, diff_moving_avg_plus_smooth_past).numpy()}')

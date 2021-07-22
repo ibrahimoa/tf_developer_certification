@@ -1,7 +1,7 @@
-# Lambda -> Arbitrary operations to improve out model
+# Lambda -> Arbitrary operations to improve our model
 from tensorflow.keras.layers import Dense, Lambda, Bidirectional, LSTM, Conv1D
 from tensorflow.keras.models import Sequential
-from time_series import *
+from time_series_1 import *
 
 
 def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
@@ -49,7 +49,7 @@ model = Sequential([
     Lambda(lambda x: x * 200.0)
 ])
 
-optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.9)  # We can get this optimum lr as in previous examples
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-5, momentum=0.9)  # We can get this optimum lr as in previous examples
 model.compile(loss=tf.keras.losses.Huber(),  # Less sensitive to outliers
               optimizer=optimizer,
               metrics=["mae"])
@@ -61,7 +61,8 @@ plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid, plot=False, figure=False)
 plot_series(time_valid, rnn_forecast, plot=False, figure=False)
 plt.show()
-print(tf.keras.metrics.mean_absolute_error(x_valid, rnn_forecast).numpy())
+print('Performance:')
+print(f'Mean absolute error: {tf.keras.metrics.mean_absolute_error(x_valid, rnn_forecast).numpy()}')
 
 # -----------------------------------------------------------
 # Retrieve a list of list results on training and test data

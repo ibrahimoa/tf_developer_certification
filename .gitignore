@@ -134,6 +134,8 @@ dmypy.json
 3 - NLP with TensorFlow/aclImdb/**
 irish-lyrics-eof.txt
 *.h5
+*.zip
+*.csv
 
 # Pyre type checker
 .pyre/

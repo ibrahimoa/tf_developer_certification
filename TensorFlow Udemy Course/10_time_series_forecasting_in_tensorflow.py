@@ -19,7 +19,6 @@ bitcoin_prices.plot(figsize=(10, 7))
 plt.ylabel("BTC Price in $")
 plt.title("Price of Bitcoin from 1 Oct 2013 to 2 Aug 2021", fontsize=16)
 plt.legend(fontsize=14)
-# plt.show()
 
 # Importing time series data with Python's CSV module
 import csv
@@ -44,7 +43,6 @@ plt.title("Price of Bitcoin from 1 Oct 2013 to 2 Aug 2021", fontsize=16)
 plt.xlabel("Date")
 plt.ylabel("BTC Price in $")
 plt.legend(fontsize=14)
-# plt.show()
 
 # creating train and test sets
 # Get bitcoin date array
@@ -62,8 +60,6 @@ plt.xlabel("Date")
 plt.ylabel("BTC Price in $")
 plt.legend(fontsize=14)
 
-
-# plt.show()
 
 # Create a function to plot time series data
 def plot_time_series(timesteps, values, format='.', start=0, end=None, label=None):
@@ -95,8 +91,6 @@ offset = 300  # offset the values by 300 timesteps
 plot_time_series(timesteps=x_test, values=y_test, start=offset, label="Test data")
 plot_time_series(timesteps=x_test[1:], values=naive_forecast, format="-", start=offset, label="Naive forecast");
 
-
-# plt.show()
 
 def mean_absolute_scaled_error(y_true, y_pred):
     """
@@ -163,31 +157,33 @@ def get_labelled_windows(x, horizon=1):
     E.g. if horizon=1 (default)
     Input: [1, 2, 3, 4, 5, 6] -> Output: ([1, 2, 3, 4, 5], [6])
     """
-    return x[:, :-horizon], x[:, -horizon]
+    return x[:, :-horizon], x[:, -horizon:]
 
 
+# Create function to view NumPy arrays as windows
 def make_windows(x, window_size=7, horizon=1):
     """
-    Turns a 1D array into a 2D array of sequental windows of window_size.
+    Turns a 1D array into a 2D array of sequential windows of window_size.
     """
-    # 1. Create a window of specific window_size (add the horizon on the end
-    # for later labelling)
+    # 1. Create a window of specific window_size (add the horizon on the end for later labelling)
     window_step = np.expand_dims(np.arange(window_size + horizon), axis=0)
     # 2. Create a 2D array of multiple window steps (minus 1 to account for 0 indexing)
-    window_indexes = window_step + np.expand_dims(np.arange(len(x) - (window_size + horizon - 1)), axis=0).T
+    window_indexes = window_step + np.expand_dims(np.arange(len(x) - (window_size + horizon - 1)),
+                                                  axis=0).T  # create 2D array of windows of size window_size
     # 3. Index on the target array (time series) with 2D array of multiple window steps
     windowed_array = x[window_indexes]
     # 4. Get the labelled windows
     windows, labels = get_labelled_windows(windowed_array, horizon=horizon)
+
     return windows, labels
 
 
-full_windwos, full_labels = make_windows(x=prices, window_size=WINDOW_SIZE, horizon=HORIZON)
-print(f"Number of windows: {len(full_windwos)}\nNumber of labels: {len(full_labels)}")
+full_windows, full_labels = make_windows(x=prices, window_size=WINDOW_SIZE, horizon=HORIZON)
+print(f"Number of windows: {len(full_windows)}\nNumber of labels: {len(full_labels)}")
 
 # view the last 3 windows/labels
 for i in range(3):
-    print(f"Window: {full_windwos[i - 3]} -> Label: {full_labels[i - 3]}")
+    print(f"Window: {full_windows[i - 3]} -> Label: {full_labels[i - 3]}")
 
 
 # Note: You can find a function which achieves similar results to the ones we implemented above at:
@@ -210,7 +206,7 @@ def make_train_test_splits(windows, labels, test_split=0.2):
     return train_windows, test_windows, train_labels, test_labels
 
 
-train_w, test_w, train_l, test_l = make_train_test_splits(full_windwos, full_labels)
+train_w, test_w, train_l, test_l = make_train_test_splits(full_windows, full_labels)
 
 import os
 
@@ -250,27 +246,25 @@ model_1.compile(loss="mae",
                 optimizer=tf.keras.optimizers.Adam(),
                 metrics=["mae"])
 
-model_1.fit(x=train_w,
-            y=train_l,
-            epochs=100,
-            verbose=0,
-            validation_data=(test_w, test_l),
-            callbacks=[create_model_checkpoint(model_name=model_1._name)])
-
-model_1.evaluate(test_w, test_l)
+# model_1.fit(x=train_w,
+#             y=train_l,
+#             epochs=100,
+#             verbose=0,
+#             validation_data=(test_w, test_l),
+#             callbacks=[create_model_checkpoint(model_name=model_1._name)])
+#
+# model_1.evaluate(test_w, test_l)
 model_1 = tf.keras.models.load_model("model_experiments/model_1_dense")
 model_1.evaluate(test_w, test_l)
 model_1_preds = make_preds(model_1, test_w)
-print(model_1_preds[:10])
 model_1_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_1_preds)
 
 # print model_1 results:
-offset: int = 300
-plt.figure(figsize=(10, 7))
-plot_time_series(timesteps=x_test[-len(test_w):], values=test_l, start=offset, label="Test data")
-plot_time_series(timesteps=x_test[-len(test_w):], values=model_1_preds, start=offset, format="-",
-                 label="Model 1 predictions")
-# plt.show()
+# offset: int = 300
+# plt.figure(figsize=(10, 7))
+# plot_time_series(timesteps=x_test[-len(test_w):], values=test_l, start=offset, label="Test data")
+# plot_time_series(timesteps=x_test[-len(test_w):], values=model_1_preds, start=offset, format="-",
+#                  label="Model 1 predictions")
 
 # MODEL 2: DENSE (WINDOW=30, HORIZON=1)
 HORIZON = 1
@@ -282,14 +276,14 @@ model_2 = tf.keras.Sequential([
     layers.Dense(HORIZON)
 ], name="model_2_dense")
 model_2.compile(loss="mae", optimizer=tf.keras.optimizers.Adam())
-model_2.fit(train_w,
-            train_l,
-            epochs=100,
-            batch_size=128,
-            verbose=0,
-            validation_data=(test_w, test_l),
-            callbacks=[create_model_checkpoint(model_name=model_2._name)])
-model_2.evaluate(test_w, test_l)
+# model_2.fit(train_w,
+#             train_l,
+#             epochs=100,
+#             batch_size=128,
+#             verbose=0,
+#             validation_data=(test_w, test_l),
+#             callbacks=[create_model_checkpoint(model_name=model_2._name)])
+# model_2.evaluate(test_w, test_l)
 model_2 = tf.keras.models.load_model("model_experiments/model_2_dense/")
 model_2.evaluate(test_w, test_l)
 model_2_preds = make_preds(model_2, input_data=test_w)
@@ -299,9 +293,7 @@ model_2_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_2_preds
 HORIZON = 7
 WINDOW_SIZE = 30
 full_windows, full_labels = make_windows(prices, window_size=WINDOW_SIZE, horizon=HORIZON)
-print(len(full_windows), len(full_labels))
 train_w, test_w, train_l, test_l = make_train_test_splits(windows=full_windows, labels=full_labels)
-print(len(train_w), len(test_w), len(train_l), len(test_l))
 model_3 = tf.keras.Sequential([
     layers.Dense(128, activation="relu"),
     layers.Dense(HORIZON)
@@ -318,8 +310,6 @@ model_3.evaluate(test_w, test_l)
 model_3 = tf.keras.models.load_model("model_experiments/model_3_dense/")
 model_3.evaluate(test_w, test_l)
 model_3_preds = make_preds(model_3, input_data=test_w)
-print(test_l.shape)
-print(model_3_preds.shape)
 model_3_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_3_preds)
 
 offset = 300
@@ -334,18 +324,58 @@ plot_time_series(timesteps=x_test[-len(test_w):],
                  format="-",
                  start=offset,
                  label="Model 3 predictions")
-# plt.show()
+
+pd.DataFrame(
+    {"naive": naive_results["mae"],
+     "horizon_1_window_7": model_1_results["mae"],
+     "horizon_1_window_30": model_2_results["mae"],
+     "horizon_7_window_30": model_3_results["mae"]},
+    index=["mae"]).plot(figsize=(10, 7), kind="bar");
+
+# MODEL 4: CONV1D
+tf.random.set_seed(42)
+HORIZON = 1  # predict next day
+WINDOW_SIZE = 7  # use previous week worth of data
+# Create windowed dataset
+full_windows, full_labels = make_windows(prices, window_size=WINDOW_SIZE, horizon=HORIZON)
+train_w, test_w, train_l, test_l = make_train_test_splits(windows=full_windows, labels=full_labels)
+
+# Before we pass our data to the Conv1D layer, we have to reshape it in order to make sure it works
+x = tf.constant(train_w[0])
+expand_dims_layer = layers.Lambda(lambda x: tf.expand_dims(x, axis=1))  # add an extra dimension for timesteps
+print(f"Original shape: {x.shape}")  # (WINDOW_SIZE)
+print(f"Expanded shape: {expand_dims_layer(x).shape}")  # (WINDOW_SIZE, input_dim)
+print(f"Original values with expanded shape:\n {expand_dims_layer(x)}")
+
+# Create model
+model_4 = tf.keras.Sequential([
+    # Create Lambda layer to reshape inputs, without this layer, the model will error
+    layers.Lambda(lambda x: tf.expand_dims(x, axis=1)),
+    # resize the inputs to adjust for window size / Conv1D 3D input requirements
+    layers.Conv1D(filters=128, kernel_size=5, padding="causal", activation="relu"),
+    layers.Dense(HORIZON)
+], name="model_4_conv1D")
+
+# Compile model
+model_4.compile(loss="mae",
+                optimizer=tf.keras.optimizers.Adam())
+
+# Fit model
+# model_4.fit(train_w,
+#             train_l,
+#             batch_size=128,
+#             epochs=100,
+#             verbose=0,
+#             validation_data=(test_w, test_l),
+#             callbacks=[create_model_checkpoint(model_name=model_4._name)])
+# print(model_4.summary())
+model_4 = tf.keras.models.load_model("model_experiments/model_4_conv1D")
+model_4.evaluate(test_w, test_l)
+model_4_preds = make_preds(model_4, test_w)
+model_4_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_4_preds)
 
 print(f"Naive results: {naive_results}")
 print(f"model_1 results: {model_1_results}")
 print(f"model_2 results: {model_2_results}")
 print(f"model_3 results: {model_3_results}")
-
-pd.DataFrame({
-    "naive": naive_results["mae"],
-    "horizon_1_window_7": model_1_results["mae"],
-    "horizon_1_window_30": model_2_results["mae"],
-    "horizon_7_window_30": model_3_results["mae"]},
-    index=["mae"]).plot(figsize=(10, 7), kind="bar");
-
-# MODEL 4: CONV1D
+print(f"model_4 results: {model_4_results}")

@@ -136,6 +136,7 @@ irish-lyrics-eof.txt
 *.h5
 *.zip
 *.csv
-
+!BTC_USD_2013-10-01_2021-08-02-CoinDesk.csv
+!sample_submission.csv
 # Pyre type checker
 .pyre/

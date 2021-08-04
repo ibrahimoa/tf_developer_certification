@@ -325,12 +325,6 @@ plot_time_series(timesteps=x_test[-len(test_w):],
                  start=offset,
                  label="Model 3 predictions")
 
-pd.DataFrame(
-    {"naive": naive_results["mae"],
-     "horizon_1_window_7": model_1_results["mae"],
-     "horizon_1_window_30": model_2_results["mae"],
-     "horizon_7_window_30": model_3_results["mae"]},
-    index=["mae"]).plot(figsize=(10, 7), kind="bar");
 
 # MODEL 4: CONV1D
 tf.random.set_seed(42)
@@ -343,9 +337,9 @@ train_w, test_w, train_l, test_l = make_train_test_splits(windows=full_windows, 
 # Before we pass our data to the Conv1D layer, we have to reshape it in order to make sure it works
 x = tf.constant(train_w[0])
 expand_dims_layer = layers.Lambda(lambda x: tf.expand_dims(x, axis=1))  # add an extra dimension for timesteps
-print(f"Original shape: {x.shape}")  # (WINDOW_SIZE)
-print(f"Expanded shape: {expand_dims_layer(x).shape}")  # (WINDOW_SIZE, input_dim)
-print(f"Original values with expanded shape:\n {expand_dims_layer(x)}")
+# print(f"Original shape: {x.shape}")  # (WINDOW_SIZE)
+# print(f"Expanded shape: {expand_dims_layer(x).shape}")  # (WINDOW_SIZE, input_dim)
+# print(f"Original values with expanded shape:\n {expand_dims_layer(x)}")
 
 # Create model
 model_4 = tf.keras.Sequential([
@@ -368,14 +362,45 @@ model_4.compile(loss="mae",
 #             verbose=0,
 #             validation_data=(test_w, test_l),
 #             callbacks=[create_model_checkpoint(model_name=model_4._name)])
-# print(model_4.summary())
 model_4 = tf.keras.models.load_model("model_experiments/model_4_conv1D")
 model_4.evaluate(test_w, test_l)
 model_4_preds = make_preds(model_4, test_w)
 model_4_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_4_preds)
 
+# MODEL 5: RNN (LSTM)
+tf.random.set_seed(42)
+inputs = layers.Input(shape=(WINDOW_SIZE))
+# expand input dimension to be compatible with LSTM.
+x = layers.Lambda(lambda x: tf.expand_dims(x, axis=1))(inputs)
+x = layers.LSTM(128, activation="relu")(x)
+output = layers.Dense(HORIZON)(x)
+model_5 = tf.keras.Model(inputs=inputs, outputs=output, name="model_5_lstm")
+model_5.compile(loss="mae",
+                optimizer=tf.keras.optimizers.Adam())
+# model_5.fit(train_w,
+#             train_l,
+#             batch_size=128,
+#             epochs=100,
+#             verbose=0,
+#             validation_data=(test_w, test_l),
+#             callbacks=[create_model_checkpoint(model_name=model_5._name)])
+model_5 = tf.keras.models.load_model("model_experiments/model_5_lstm")
+model_5.evaluate(test_w, test_l)
+model_5_preds = make_preds(model_5, test_w)
+model_5_results = evaluate_preds(y_true=tf.squeeze(test_l), y_pred=model_5_preds)
+
+pd.DataFrame(
+    {"Naive": naive_results["mae"],
+     "Dense (H=1, W=7)": model_1_results["mae"],
+     "Dense (H=1, W=30)": model_2_results["mae"],
+     "hDense (H=7, W=30)": model_3_results["mae"],
+     "Conv1D (H=1, W=7)": model_4_results["mae"],
+     "LSTM (H=1, W=7)": model_5_results["mae"]},
+    index=["mae"]).plot(figsize=(10, 7), kind="bar")
+plt.show()
 print(f"Naive results: {naive_results}")
 print(f"model_1 results: {model_1_results}")
 print(f"model_2 results: {model_2_results}")
 print(f"model_3 results: {model_3_results}")
 print(f"model_4 results: {model_4_results}")
+print(f"model_5 results: {model_5_results}")
